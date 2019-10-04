@@ -2,12 +2,20 @@
 #Created by Spencer Bouck 10/4/19
 
 import os
+import string
 
-ironFile = open("Iron2.png","rb")
+"""
+ironFile = open("Iron.png","rb")
 ironText = ironFile.read()
 ironData = bytearray(ironText[0:4])
+""" 
 
-print(ironData)
+pdfData = [0x25, 0x50, 0x44, 0x46]
+pngData = [137, 80, 78, 71]
+
+fileType = raw_input("Enter 0 for pdf, 1 for png: ")
+expectedData = [pdfData, pngData][int(fileType)]
+
 
 
 
@@ -83,7 +91,7 @@ def isDecrypted(index):
     encData = bytearray(encText[0:4])
     
     encBit = getBit(encData, index)
-    ironBit = getBit(ironData, index)
+    ironBit = getBit(expectedData, index)
     return encBit == ironBit
 
 def testKey(key):
@@ -95,22 +103,51 @@ def testKey(key):
         for i in range(8):
             
             if (isDecrypted(24 - j + i)):
+                #key.lock(j + i)
+                pass
                 
-                key.lock(j + i)
             else:
                 key.toggleBit(j + i)
+                #key.lock(j + i)
                 steps += 1
             
-    #print ("%i steps expected to remain" %steps)
     
+
+def verifyText():
+    os.system('./decrypt ' + key.getHex())
+    encFile = open("output-dec","rb")
+    encText = encFile.read()
+    
+    for letter in encText:
+        if(letter not in string.printable):
+            return False
+    return True
+
 
 key = Key(4)
 
 
-testKey(key)
+"""
+for char0 in string.lowercase:
+    ironData[0] = char0
+    for char1 in string.lowercase:
+        ironData[1] = char1
+        print ("Trying prefix %s" %ironData[0:2])
+        for char2 in string.lowercase:
+            ironData[2] = char2
+            for char3 in string.lowercase:
+                ironData[3] = char3
+                testKey(key)
+                if (verifyText()):
+                    break
+                #print ("Trying %s" %ironData)
+"""
 #while (key.increment()):
 #    testKey(key)
 
+testKey(key)
+
 print ("Key: %s" %(key.getHex()))
+os.system('./decrypt ' + key.getHex())
 
 raw_input("Press enter to exit")
